@@ -10,7 +10,7 @@ class Actor extends FlxSprite {
 
 	override public function new(gridX:Float, gridY:Float){
 		super(100, 100);
-		loadGraphic("assets/images/pacman.png", true, 64, 64);
+		loadGraphic("assets/images/pacman.png", true, 32, 32);
 		animation.add("default", [0, 1, 2, 1], 6);
 		animation.play("default");
 		gridPos = new FlxPoint(gridX, gridY);
@@ -21,22 +21,6 @@ class Actor extends FlxSprite {
 
 		x = Settings.GRID_X + gridPos.x * Settings.TILE_WIDTH;
 		y = Settings.GRID_Y + gridPos.y * Settings.TILE_WIDTH;
-
-
-		if(FlxG.keys.justPressed.UP){
-			pressedDirection = FlxObject.UP;
-		}
-		if(FlxG.keys.justPressed.RIGHT){
-			pressedDirection = FlxObject.RIGHT;	
-		}
-
-		if(FlxG.keys.justPressed.DOWN){
-			pressedDirection = FlxObject.DOWN;
-		}
-
-		if(FlxG.keys.justPressed.LEFT){
-			pressedDirection = FlxObject.LEFT;
-		}
 	}
 
 	function updateRotation(){

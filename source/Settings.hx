@@ -9,8 +9,6 @@ class Settings {
 	public static var GRID_WIDTH = 7;
 	public static var GRID_HEIGHT = 7;
 
-	public static var TICK_TIME = .5;
-
-
-
+	public static var TICK_TIME = .4;
+	
 }

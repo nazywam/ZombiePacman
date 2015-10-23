@@ -7,6 +7,7 @@ import flixel.text.FlxText;
 import flixel.ui.FlxButton;
 import flixel.group.FlxGroup;
 import flixel.util.FlxTimer;
+import openfl.Assets;
 
 class PlayState extends FlxState
 {
@@ -18,12 +19,10 @@ class PlayState extends FlxState
 	{
 		super.create();
 
+		grid = new FlxTypedGroup<Tile>();
+		add(grid);
 
-		for(y in 0...Settings.GRID_HEIGHT){
-			for(x in 0...Settings.GRID_WIDTH){
-				var t = new Tile(Settings.GRID_X + Settings.TILE_WIDTH * x, Settings.GRID_Y + Settings.TILE_WIDTH * y, Std.random(2));
-			}
-		}
+		loadMap("assets/data/level.txt");
 
 		actors = new FlxTypedGroup<Actor>();
 		add(actors);
@@ -32,6 +31,19 @@ class PlayState extends FlxState
 		actors.add(player);
 
 		tick();
+	}
+
+	public function loadMap(mapPath:String){
+		var _map = Assets.getText(mapPath);
+		var _lines =_map.split('\n');
+
+		for(l in 0..._lines.length){
+			var _rows = _lines[l].split(',');
+			for(r in 0..._rows.length){
+				var t = new Tile(r, l, Std.parseInt(_rows[r])-1);
+				grid.add(t);
+			}
+		}
 	}
 	
 
