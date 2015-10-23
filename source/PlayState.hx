@@ -10,15 +10,22 @@ import flixel.group.FlxGroup;
 import flixel.util.FlxTimer;
 import openfl.Assets;
 
+import flash.net.Socket;
+
 class PlayState extends FlxState
 {
 
 	var actors : FlxTypedGroup<Actor>;
 	var grid : Array<Array<Tile>>;
+	var socket : Socket;
 
 	override public function create():Void
 	{
 		super.create();
+
+
+		socket = new Socket("10.10.97.84", 33333);
+
 
 		loadMap("assets/data/level.txt");
 
