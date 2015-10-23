@@ -6,9 +6,13 @@ import flixel.FlxG;
 class Actor extends FlxSprite {
 
 	public var gridPos:FlxPoint;
-	public var pressedDirection:Int;
 
-	override public function new(gridX:Float, gridY:Float){
+	public var pressedDirection:Int;
+	public var previousPressedDirection:Int;
+
+	public var canMove:Bool = true;
+
+	override public function new(gridX:Int, gridY:Int){
 		super(100, 100);
 		loadGraphic("assets/images/pacman.png", true, 32, 32);
 		animation.add("default", [0, 1, 2, 1], 6);
@@ -44,15 +48,20 @@ class Actor extends FlxSprite {
 	public function tick(){
 		updateRotation();
 
-		switch (pressedDirection) {
-			case FlxObject.UP:
-				gridPos.y--;
-			case FlxObject.RIGHT:
-				gridPos.x++;
-			case FlxObject.DOWN:
-				gridPos.y++;
-			case FlxObject.LEFT:
-				gridPos.x--;
+		if(canMove){
+			switch (pressedDirection) {
+				case FlxObject.UP:
+					gridPos.y--;
+				case FlxObject.RIGHT:
+					gridPos.x++;
+				case FlxObject.DOWN:
+					gridPos.y++;
+				case FlxObject.LEFT:
+					gridPos.x--;
+			}
 		}
+
+		canMove = true;
+		previousPressedDirection = pressedDirection;
 	}
 }
