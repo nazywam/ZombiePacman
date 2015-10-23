@@ -11,8 +11,6 @@ class Tile extends FlxSprite {
 		super();
 		tileId = t;
 
-		trace(tileId);
-
 		loadGraphic("assets/images/wall32thin.png", true, 32, 32);
 		animation.add("default", [t], 1);
 		animation.play("default");
