@@ -1,0 +1,10 @@
+
+
+class Player extends Actor {
+	
+
+
+
+	
+
+}
