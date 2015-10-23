@@ -12,10 +12,18 @@ class PlayState extends FlxState
 {
 
 	var actors : FlxTypedGroup<Actor>;
+	var grid : FlxTypedGroup<Tile>;
 
 	override public function create():Void
 	{
 		super.create();
+
+
+		for(y in 0...Settings.GRID_HEIGHT){
+			for(x in 0...Settings.GRID_WIDTH){
+				var t = new Tile(Settings.GRID_X + Settings.TILE_WIDTH * x, Settings.GRID_Y + Settings.TILE_WIDTH * y, Std.random(2));
+			}
+		}
 
 		actors = new FlxTypedGroup<Actor>();
 		add(actors);
