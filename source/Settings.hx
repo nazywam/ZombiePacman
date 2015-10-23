@@ -6,4 +6,6 @@ class Settings {
 	public static var GRID_X = 128;
 	public static var GRID_Y = 128;
 
+	public static var TICK_TIME = 1.0;
+
 }
