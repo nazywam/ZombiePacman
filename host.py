@@ -1,134 +1,94 @@
 import socket
-import sys
-from threading import *
 import random
+import sys
 
-HOST = ''
-PORT = 6767 
+HOST = '10.10.99.85'
+PORT = 6675
+BUFF_SIZE = 1024
 
-players = []
-joined_flag = len(players)
-started_flag = False
-required_players = 2
-map_no = random.randint(1, 9)
-map_data_tmp = []
-map_data = []
-lock = Lock()
+REQUIRED_PLAYERS = 2
 
-with open('assets/data/level'+str(map_no)+'.txt', 'r') as f:
-    map_data_tmp=(f.read().split('\n'))
-    for i in map_data_tmp:
-        map_data.append(i.split(','))
 
-class Player():
-    player_count = 0
-    ready_players = 0
+def get_map_no(m):
+    return random.randint(1, m)
 
-    def __init__(self, conn):
-        global map_data
-        """
-        self.direction
-        0 -> UP
-        1 -> RIGHT
-        2 -> DOWN
-        3 -> RIGHT
-        """
-        self.conn = conn
-        self.direction = 0
-        self.id_c = Player.player_count
-        Player.player_count += 1
-        self.x = random.randint(0, 15)
-        self.y = random.randint(0, 15)
-        self.started_flag=False
-    def set_ready(self):
-        global players, joined_flag, required_players
-        Player.ready_players += 1
-        joined_flag = len(players)
+
+def get_start_pos(m, w, h):
+    """
+        m -> map_no
+        w -> max_width
+        h -> max_height
+    """
+    x = random.randint(1, w)
+    y = random.randint(1, h)
+    return (x, y)
+
+
+def get_all_start_pos(m, w, h, n):
+    """
+    get start position for all connected players
+        m -> map_no
+        w -> max_width
+        h -> max_height
+        n -> number of connected players
+    """
+    res = ''
+    for i in xrange(n):
+        x = get_start_pos(m, w, h)
+        res += str(x[0]) + 'x' + str(x[1]) + ':'
+    res = res[:-1]  # trimming last colon
+    return res
+
+
+def parse_directions(dire):
+    res = ''
+    for i in dire:
+        print res
+        res += str(i).strip() + ':'
+    res = res[:-1]
+    res += '\n'
+    return res
+
+
+def com_with_clients():
+    global connections
+    print connections
+    map_no = get_map_no(10)
+    for i, c in enumerate(connections):
+        if c[0].recv(BUFF_SIZE).strip() != 'READY':
+            c[0].sendall('BLAD INICJALIZACJI POLACZENIA (nie ready?)')
+            print c, 'BLAD INICJALIZACJI POLACZENIA'
+            connections.remove(c)
+            c[0].close()
+    st_pos = get_all_start_pos(map_no, 15, 15, len(connections))
+    directions = [0 for i in xrange(len(connections))]
+    for i, c in enumerate(connections):
+        c[0].sendall('START\n')
+        connections[i][0].sendall(str(i) + ':' + str(map_no) + '\n')
+        c[0].sendall(st_pos + '\n')
+    while True:
+        for i, c in enumerate(connections):
+            directions[i] = c[0].recv(BUFF_SIZE)
+        dire=parse_directions(directions)
+        print dire
+        for i, c in enumerate(connections):
+            c[0].sendall(dire)
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-print 'Socket created'
-
 try:
     s.bind((HOST, PORT))
 except socket.error as msg:
     print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
     sys.exit()
-print 'Socket bind complete'
 s.listen(10)
-print 'Socket now listening'
 
-
-def clientthread(conn, id_c):
-    global players, joined_flag, required_players, map_no
-    global lock
-
-    data = conn.recv(1024).strip()
-    print data
-    if data == 'READY':
-        players[id_c].set_ready()
-    while True:
-        if joined_flag:
-#            print 'joined_flag', joined_flag
-            print("lock 1 acquired ", id_c)
-            lock.acquire()
-            try:
-                joined_flag -= 1
-                print str(Player.ready_players) + '/' + str(required_players)+'\n'
-                conn.sendall(str(Player.ready_players) + '/' + str(required_players)+'\n')
-            finally:
-                print("lock 1 released ", id_c)
-                lock.release()
-            if Player.ready_players >= required_players and not started_flag:
-                conn.sendall('START\n')
-                conn.sendall(str(id_c)+' '+str(map_no)+'\n')
-                res = ''
-                for i in xrange(len(players)):
-                    if(i == len(players)-1):
-                        res += str(players[i].x)+'x'+str(players[i].y)
-                    else:
-                        res += str(players[i].x)+'x'+str(players[i].y)+'_'    
-                    
-                res+='\n'
-                print("pozycje poczatkowe graczy", res)
-                conn.sendall(res)
-                players[id_c].started_flag=True
-            if players[id_c].started_flag:
-                print("lock 2 acquired ", id_c)
-                lock.acquire()
-                try:
-                    players[id_c].direction=conn.recv(1024).strip()
-                    #print(id_c, ' id klienta i jego kierunek ', players[id_c].direction)
-                finally:
-                    print("lock 2 released ", id_c)
-                    lock.release()
-                print("lock 3 acquired ", id_c)
-                lock.acquire()
-                try:
-                    for i in xrange(len(players)):
-                        if i==(len(players)-1):
-                            res += str(players[i].direction)
-                        else:
-                            res += str(players[i].direction)+'_'    
-
-                    res+='\n'
-                    print('kierunki', res)
-                    conn.sendall(res)
-                finally:
-                    print("lock 3 released ", id_c)
-                    lock.release()
-            print 'wysylam'
-        # Receiving from client
-
-    conn.close()
-
+connections = []
 while 1:
-    conn, addr = s.accept()
-    print 'Connected with ' + addr[0] + ':' + str(addr[1])
-
-    players.append(Player(conn))
-
-    Thread(group=None, target=clientthread, name=None,
-           args=(conn, players[-1].id_c)).start()
-
-
+    #conn,addr = s.accept()
+    # if conn.recv(BUFF_SIZE) == 'READY':
+    # connections.append((conn,addr))
+    # s.accept()
+    connections.append(s.accept())
+    if len(connections) >= REQUIRED_PLAYERS:
+        com_with_clients()
 s.close()
