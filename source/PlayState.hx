@@ -17,7 +17,6 @@ import sys.net.Socket;
 class PlayState extends FlxState
 {
 
-	var player : Player;
 	var actors : Array<Actor>;
 	var grid : Array<Array<Tile>>;
 
@@ -25,7 +24,7 @@ class PlayState extends FlxState
 	var clientId : Int;
 	var playersNumber : Int;
 
-	public static var ONLINE : Bool = false;
+	public static var ONLINE : Bool = true;
 
 	override public function create():Void
 	{
@@ -40,7 +39,7 @@ class PlayState extends FlxState
 			socket = new Socket();
 			socket.setTimeout(1);
 			try {
-				socket.connect(new Host("10.10.97.84"), 6659);
+				socket.connect(new Host("localhost"), 6674);
 			} 
 			catch(e:Dynamic){
 				trace("Couldn't connect to server");
@@ -58,22 +57,28 @@ class PlayState extends FlxState
 			}
 			var tmp = getLine().split(" ");
 
-			var selectedMap:Int = Std.parseInt(tmp[0]);
+			clientId = Std.parseInt(tmp[0]);
+			trace("Client Id: ", clientId);
+
+			var selectedMap:Int = Std.parseInt(tmp[1]);
 			loadMap("assets/data/level" + selectedMap + ".txt");
 			trace("Map: ", selectedMap);
 
-			clientId = Std.parseInt(tmp[1]);
-			trace("Client Id: ", clientId);
-
-			var playerPos = getLine().split(" ");
+			var playerPos = getLine().split("_");
 			for(i in 0...playerPos.length){
 				var xy = playerPos[i].split("x");
-
+				trace(xy);
 				var a = new Actor(Std.parseInt(xy[0]), Std.parseInt(xy[1]));
 				actors.push(a);
 				add(a);
-			}
+			} 
+		} else {
+			clientId = 0;
+			var a = new Actor(1, 1);
+			actors.push(a);
+			loadMap("assets/data/level1.txt");
 		}
+		trace("tick");
 		tick();
 	}
 
@@ -82,7 +87,9 @@ class PlayState extends FlxState
 			var a = "";
 
 			try {
-				return  socket.input.readLine();
+				var tmp = socket.input.readLine();
+				trace(tmp);
+				return  tmp;
 			}
 			catch (e:Dynamic){
 			}
@@ -114,10 +121,13 @@ class PlayState extends FlxState
 
 	public function preTick(){
 		if(ONLINE){
-			socket.output.writeInt32(player.pressedDirection);
+			trace("Debugg");
+			trace("###", actors[clientId].pressedDirection, "###");
+			trace("Debuga2");
+			socket.output.writeString(Std.string(actors[clientId].pressedDirection));
 			socket.output.flush();
 
-			var directions = getLine().split(" ");
+			var directions = getLine().split("_");
 			for(i in 0...directions.length){
 				actors[i].pressedDirection = Std.parseInt(directions[i]);
 			}
@@ -169,6 +179,8 @@ class PlayState extends FlxState
 			a.tick();
 		}
 
+
+		trace("pretick");
 		var t = new FlxTimer();
 		t.start(Settings.TICK_TIME, function(_){
 			preTick();

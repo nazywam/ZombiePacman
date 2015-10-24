@@ -7,8 +7,8 @@ class Actor extends FlxSprite {
 
 	public var gridPos:FlxPoint;
 
-	public var pressedDirection:Int;
-	public var previousPressedDirection:Int;
+	public var pressedDirection:Int = FlxObject.UP;
+	public var previousPressedDirection:Int = FlxObject.UP;
 
 	public var canMove:Bool = true;
 
