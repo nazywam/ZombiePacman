@@ -57,12 +57,6 @@ class PlayState extends FlxState
 			socket.output.writeString("READY");
 			socket.output.flush();
 
-			while(true){
-				var players = getLine();
-				if(players == "START"){
-					break;
-				}
-			}
 			var tmp = getLine().split(':');
 
 			clientId = Std.parseInt(tmp[1]);
