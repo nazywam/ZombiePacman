@@ -1,28 +1,25 @@
-'''
-    Simple socket server using threads
-'''
-
 import socket
 import sys
 from threading import *
 import random
-HOST = ''   # Symbolic name meaning all available interfaces
-PORT = 8787  # Arbitrary non-privileged port
+
+HOST = ''
+PORT = 6767 
+
 players = []
 joined_flag = len(players)
 started_flag = False
-no_players_req = 2  # number of players required to START
+required_players = 2
 map_no = random.randint(1, 9)
 map_data_tmp = []
 map_data = []
+lock = Lock()
 
 with open('assets/data/level'+str(map_no)+'.txt', 'r') as f:
     map_data_tmp=(f.read().split('\n'))
     for i in map_data_tmp:
         map_data.append(i.split(','))
-#print map_data
-print len(map_data)
-print len(map_data[0])
+
 class Player():
     player_count = 0
     ready_players = 0
@@ -44,40 +41,31 @@ class Player():
         self.y = random.randint(0, 15)
         self.started_flag=False
     def set_ready(self):
-        global players, joined_flag, no_players_req
+        global players, joined_flag, required_players
         Player.ready_players += 1
         joined_flag = len(players)
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print 'Socket created'
 
-# Bind socket to local host and port
 try:
     s.bind((HOST, PORT))
 except socket.error as msg:
     print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
     sys.exit()
-
 print 'Socket bind complete'
-
-# Start listening on socket
 s.listen(10)
 print 'Socket now listening'
 
-# Function for handling connections. This will be used to create threads
-
 
 def clientthread(conn, id_c):
-    global players, joined_flag, no_players_req, map_no
-    lock = Lock()
-    # Sending message to connected client
-    # conn.send('Welcome to the server. Type something and hit enter\n') #send
-    # only takes string
+    global players, joined_flag, required_players, map_no
+    global lock
+
     data = conn.recv(1024).strip()
     print data
     if data == 'READY':
         players[id_c].set_ready()
-    # infinite loop so that function do not terminate and thread do not end.
     while True:
         if joined_flag:
 #            print 'joined_flag', joined_flag
@@ -85,12 +73,12 @@ def clientthread(conn, id_c):
             lock.acquire()
             try:
                 joined_flag -= 1
-                print str(Player.ready_players) + '/' + str(no_players_req)+'\n'
-                conn.sendall(str(Player.ready_players) + '/' + str(no_players_req)+'\n')
+                print str(Player.ready_players) + '/' + str(required_players)+'\n'
+                conn.sendall(str(Player.ready_players) + '/' + str(required_players)+'\n')
             finally:
                 print("lock 1 released ", id_c)
                 lock.release()
-            if Player.ready_players >= no_players_req and not started_flag:
+            if Player.ready_players >= required_players and not started_flag:
                 conn.sendall('START\n')
                 conn.sendall(str(id_c)+' '+str(map_no)+'\n')
                 res = ''
@@ -133,16 +121,12 @@ def clientthread(conn, id_c):
 
     conn.close()
 
-# now keep talking with the client
 while 1:
-    # wait to accept a connection - blocking call
     conn, addr = s.accept()
     print 'Connected with ' + addr[0] + ':' + str(addr[1])
 
-    # start new thread takes 1st argument as a function name to be run, second
-    # is the tuple of arguments to the function.
     players.append(Player(conn))
-    #lock = Lock()
+
     Thread(group=None, target=clientthread, name=None,
            args=(conn, players[-1].id_c)).start()
 
