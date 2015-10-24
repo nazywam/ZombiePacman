@@ -39,7 +39,7 @@ class PlayState extends FlxState
 			socket = new Socket();
 			socket.setTimeout(1);
 			try {
-				socket.connect(new Host("10.10.97.146"), 6779);
+				socket.connect(new Host("10.10.97.146"), 9779);
 			} 
 			catch(e:Dynamic){
 				trace("Couldn't connect to server");
