@@ -12,6 +12,7 @@ clients = []
 positions = []
 level = 0
 grid = []
+items = ""
 
 def getRandomPos():
     global grid
@@ -35,6 +36,15 @@ def init():
     grid = [list(map(int, x.split(','))) for x in s.strip().split("\n")]
     print(grid)
     positions = [getRandomPos() for x in range(REQUIRED_PLAYERS)]
+    h = len(grid)
+    w = len(grid[0])
+    items = [['0']*w]*h
+    print(items)
+    for i in range(w*h//10):
+        items[random.randint(0, h-1)][random.randint(0, w-1)] = '1'
+    for i in range(w*h//10):
+        items[random.randint(0, h-1)][random.randint(0, h-1)] = '2'
+    items = "".join(["".join(x) for x in items])
 
 class EchoServerClientProtocol(asyncio.Protocol):
 
