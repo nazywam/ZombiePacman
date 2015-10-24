@@ -9,8 +9,14 @@ import flixel.ui.FlxButton;
 import flixel.group.FlxGroup;
 import flixel.util.FlxTimer;
 import openfl.Assets;
+import openfl.utils.ByteArray;
 
-import flash.net.Socket;
+import sys.net.Host;
+import sys.net.Socket;
+
+
+
+
 
 class PlayState extends FlxState
 {
@@ -22,10 +28,20 @@ class PlayState extends FlxState
 	override public function create():Void
 	{
 		super.create();
+		//FlxG.log.redirectTraces = true;
 
 
-		socket = new Socket("10.10.97.84", 33333);
+		socket = new Socket();
+		socket.setTimeout(1);
+		try {
+			socket.connect(new Host("10.10.97.85"), 6665);
+		} 
+		catch(e:Dynamic){
+			trace("Couldn't connect to server");
+		}
 
+		trace(socket.input.readLine());
+		socket.output.writeString("HEJ SERWERZE SLYSZYSZ MNIE?");
 
 		loadMap("assets/data/level.txt");
 
@@ -37,6 +53,11 @@ class PlayState extends FlxState
 
 		tick();
 	}
+
+	function sendMessage(){
+
+	}
+
 
 	public function loadMap(mapPath:String){
 		var _map = Assets.getText(mapPath);
@@ -97,6 +118,8 @@ class PlayState extends FlxState
 						}
 					}
 			}
+			
+
 
 			a.tick();
 		}

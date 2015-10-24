@@ -14,7 +14,7 @@ class Actor extends FlxSprite {
 
 	override public function new(gridX:Int, gridY:Int){
 		super(100, 100);
-		loadGraphic("assets/images/pacman.png", true, 32, 32);
+		loadGraphic("assets/images/pacman2.png", true, 32, 32);
 		animation.add("default", [0, 1, 2, 1], 6);
 		animation.play("default");
 		gridPos = new FlxPoint(gridX, gridY);
