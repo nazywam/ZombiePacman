@@ -2,8 +2,8 @@ import socket
 import random
 import sys
 
-HOST = '10.10.99.85'
-PORT = 6675
+HOST = 'localhost'
+PORT = 9999
 BUFF_SIZE = 1024
 
 REQUIRED_PLAYERS = 2
@@ -53,7 +53,7 @@ def parse_directions(dire):
 def com_with_clients():
     global connections
     print connections
-    map_no = get_map_no(10)
+    map_no = get_map_no(9)
     for i, c in enumerate(connections):
         if c[0].recv(BUFF_SIZE).strip() != 'READY':
             c[0].sendall('BLAD INICJALIZACJI POLACZENIA (nie ready?)')

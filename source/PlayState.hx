@@ -19,6 +19,7 @@ class PlayState extends FlxState
 
 	var actors : Array<Actor>;
 	var grid : Array<Array<Tile>>;
+	var collectibles : Array<Array<Collectible>>;
 
 	var socket : Socket;
 	var clientId : Int;
@@ -30,7 +31,7 @@ class PlayState extends FlxState
 	{
 		super.create();
 		//FlxG.log.redirectTraces = true;
-		
+		FlxG.autoPause = false;
 
 		actors = new Array<Actor>();
 
@@ -39,7 +40,7 @@ class PlayState extends FlxState
 			socket = new Socket();
 			socket.setTimeout(1);
 			try {
-				socket.connect(new Host("10.10.97.146"), 6767);
+				socket.connect(new Host("10.10.97.146"), 9999);
 			} 
 			catch(e:Dynamic){
 				trace("Couldn't connect to server");
@@ -55,7 +56,7 @@ class PlayState extends FlxState
 					trace(players, " player ready");
 				}
 			}
-			var tmp = getLine().split(" ");
+			var tmp = getLine().split(":");
 
 			clientId = Std.parseInt(tmp[0]);
 			trace("Client Id: ", clientId);
@@ -64,7 +65,7 @@ class PlayState extends FlxState
 			loadMap("assets/data/level" + selectedMap + ".txt");
 			trace("Map: ", selectedMap);
 
-			var playerPos = getLine().split("_");
+			var playerPos = getLine().split(":");
 			for(i in 0...playerPos.length){
 				var xy = playerPos[i].split("x");
 				trace(xy);
@@ -76,7 +77,8 @@ class PlayState extends FlxState
 			clientId = 0;
 			var a = new Actor(1, 1);
 			actors.push(a);
-			loadMap("assets/data/level1.txt");
+			add(a);
+			loadMap("assets/data/level"+Std.string(Std.random(10))+".txt");
 		}
 		trace("tick");
 		tick();
@@ -101,16 +103,26 @@ class PlayState extends FlxState
 		var _map = Assets.getText(mapPath);
 		var _lines =_map.split('\n');
 
+		collectibles = new Array<Array<Collectible>>();
 		grid = new Array<Array<Tile>>();
 
 		for(l in 0..._lines.length){
 			grid[l] = new Array<Tile>();
+			collectibles[l] = new Array<Collectible>();
 
 			var _rows = _lines[l].split(',');
 			for(r in 0..._rows.length){
 				var t = new Tile(r, l, Std.parseInt(_rows[r])-1);
 				add(t);
 				grid[l].push(t);
+
+				collectibles.push(null);
+
+				if(Std.parseInt(_rows[r]) == 1){
+					var c = new Collectible(r, l);
+					add(c);
+					collectibles[l][r] = c;
+				}
 			}
 		}
 	}
@@ -121,73 +133,65 @@ class PlayState extends FlxState
 
 	public function preTick(){
 		if(ONLINE){
-			trace("Debugg");
-			trace("###", actors[clientId].pressedDirection, "###");
-			trace("Debuga2");
 			socket.output.writeString(Std.string(actors[clientId].pressedDirection));
 			socket.output.flush();
-			trace("debuga3");
-
 
 			var d = getLine();
-			trace(d);
 			var directions = d.split("_");
 			for(i in 0...directions.length){
-				trace("@@"+directions[i]+"@@");
-				trace(Std.parseInt(directions[i]));
 				actors[i].pressedDirection = Std.parseInt(directions[i]);
 			}
-			trace("debuga4");
 		}
 
 		tick();
 	}
 
+	function validMove(a:Actor, d:Int){
+		switch (d) {
+			case FlxObject.UP:
+				if(getTile(a.gridPos.y-1, a.gridPos.x).tileId !=  0){
+					return false;
+				}
+			case FlxObject.RIGHT:
+				if(getTile(a.gridPos.y, a.gridPos.x+1).tileId !=  0){
+					return false;
+				}
+			case FlxObject.DOWN:
+				if(getTile(a.gridPos.y+1, a.gridPos.x).tileId !=  0){
+					return false;
+				}
+			case FlxObject.LEFT:
+				if(getTile(a.gridPos.y, a.gridPos.x-1).tileId !=  0){
+					return false;
+				}
+		}
+
+		return true;
+	}
+
 	public function tick(){
 		for(a in actors){
-			switch (a.pressedDirection) {
-				case FlxObject.UP:
-					if(getTile(a.gridPos.y-1, a.gridPos.x).tileId !=  0){
-						if(a.previousPressedDirection != a.pressedDirection){
-							a.pressedDirection = a.previousPressedDirection;
-						} else {
-							a.canMove = false;
-							
-						}
-					}
-				case FlxObject.RIGHT:
-					if(getTile(a.gridPos.y, a.gridPos.x+1).tileId !=  0){
-						if(a.previousPressedDirection != a.pressedDirection){
-							a.pressedDirection = a.previousPressedDirection;
-						} else {
-							a.canMove = false;
-							
-						}
-					}
-				case FlxObject.DOWN:
-					if(getTile(a.gridPos.y+1, a.gridPos.x).tileId !=  0){
-						if(a.previousPressedDirection != a.pressedDirection){
-							a.pressedDirection = a.previousPressedDirection;
-						} else {
-							a.canMove = false;
-							
-						}
-					}
-				case FlxObject.LEFT:
-					if(getTile(a.gridPos.y, a.gridPos.x-1).tileId !=  0){
-						if(a.previousPressedDirection != a.pressedDirection){
-							a.pressedDirection = a.previousPressedDirection;
-						} else {
-							a.canMove = false;
-							
-						}
-					}
+			if(!validMove(a, a.pressedDirection)){
+				if(validMove(a, a.previousPressedDirection)){
+					a.pressedDirection = a.previousPressedDirection;
+				} else {
+					a.canMove = false;
+				}
 			}
 			a.tick();
+
+			var gridY = Std.int(a.gridPos.y);
+			var gridX = Std.int(a.gridPos.x);
+
+			if(collectibles[gridY][gridX] != null && !collectibles[gridY][gridX].taken){
+				collectibles[gridY][gridX].taken = true;
+				collectibles[gridY][gridX].visible = false;
+				//FlxG.camera.color = 0xFF000000 + Std.random(0xFFFFFF);
+				
+			}
 		}
 
 
-		trace("pretick");
 		var t = new FlxTimer();
 		t.start(Settings.TICK_TIME, function(_){
 			preTick();

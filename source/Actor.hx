@@ -12,11 +12,18 @@ class Actor extends FlxSprite {
 
 	public var canMove:Bool = true;
 
+	public var isDead:Bool = true;
+
 	override public function new(gridX:Int, gridY:Int){
 		super(100, 100);
-		loadGraphic("assets/images/pacman2.png", true, 32, 32);
+		loadGraphic("assets/images/player.png", true, 32, 32);
 		animation.add("default", [0, 1, 2, 1], 6);
-		animation.play("default");
+		animation.add("dead0", [8, 9], 2);
+		animation.add("dead1", [10, 11], 2);
+		animation.add("dead2", [12, 13], 2);
+		animation.add("dead3", [14, 15], 2);
+
+		animation.play("dead0");
 		gridPos = new FlxPoint(gridX, gridY);
 	}
 
@@ -46,7 +53,13 @@ class Actor extends FlxSprite {
 	}
 
 	public function tick(){
-		updateRotation();
+		if(!isDead){
+			updateRotation();	
+		} else {
+			angle = 0;
+			flipX = false;
+		}
+		
 
 		if(canMove){
 			switch (pressedDirection) {
