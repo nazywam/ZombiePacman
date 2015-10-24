@@ -25,7 +25,7 @@ class PlayState extends FlxState
 	var clientId : Int;
 	var playersNumber : Int;
 
-	public static var ONLINE : Bool = false;
+	public static var ONLINE : Bool = true;
 
 	public static var host:String;
 	public static var port:Int;
@@ -33,7 +33,7 @@ class PlayState extends FlxState
 	override public function new(){
 		super();
 		host = "10.10.97.146";
-		port = 8888;
+		port = 9911;
 	}
 
 	override public function create():Void
