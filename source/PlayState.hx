@@ -39,7 +39,7 @@ class PlayState extends FlxState
 			socket = new Socket();
 			socket.setTimeout(1);
 			try {
-				socket.connect(new Host("10.10.97.146"), 6776);
+				socket.connect(new Host("10.10.97.146"), 6775);
 			} 
 			catch(e:Dynamic){
 				trace("Couldn't connect to server");
@@ -130,8 +130,10 @@ class PlayState extends FlxState
 
 			var directions = getLine().split("_");
 			for(i in 0...directions.length){
+				trace(Std.parseInt(directions[i]));
 				actors[i].pressedDirection = Std.parseInt(directions[i]);
 			}
+			trace("debuga4");
 		}
 
 		tick();

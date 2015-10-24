@@ -7,7 +7,7 @@ import sys
 from threading import *
 import random
 HOST = ''   # Symbolic name meaning all available interfaces
-PORT = 6776  # Arbitrary non-privileged port
+PORT = 6775  # Arbitrary non-privileged port
 players = []
 joined_flag = len(players)
 started_flag = False
