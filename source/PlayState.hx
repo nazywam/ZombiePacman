@@ -130,6 +130,7 @@ class PlayState extends FlxState
 
 			var directions = getLine().split("_");
 			for(i in 0...directions.length){
+				trace("@@"+directions[i]+"@@");
 				trace(Std.parseInt(directions[i]));
 				actors[i].pressedDirection = Std.parseInt(directions[i]);
 			}
