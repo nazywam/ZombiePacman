@@ -7,7 +7,7 @@ import sys
 from threading import *
 import random
 HOST = ''   # Symbolic name meaning all available interfaces
-PORT = 6674  # Arbitrary non-privileged port
+PORT = 7676  # Arbitrary non-privileged port
 players = []
 joined_flag = len(players)
 started_flag = False
@@ -37,7 +37,7 @@ class Player():
         3 -> RIGHT
         """
         self.conn = conn
-        self.direction = 1
+        self.direction = 0
         self.id_c = Player.player_count
         Player.player_count += 1
         self.x = random.randint(0, 15)
