@@ -1,94 +1,71 @@
 import socket
+import asyncio
+import binascii
 import random
-import sys
-
-HOST = '10.10.97.146'
-PORT = 8888
-BUFF_SIZE = 1024
 
 REQUIRED_PLAYERS = 2
+started = False
+clientsArr = [0]*REQUIRED_PLAYERS
+clientsReceived = 0
+clients = []
+positions = []
+
+def getRandomPos():
+    return (random.randint(0,4), random.randint(0, 4))
 
 
-def get_map_no(m):
-    return random.randint(1, m)
+class EchoServerClientProtocol(asyncio.Protocol):
+
+    def start_server(loop, host, port):
+        f = loop.create_server(EchoServer, host, port)
+        return loop.run_until_complete(f)
+
+    def connection_made(self, transport):
+        global clients
+        peername = transport.get_extra_info('peername')
+        print('Connection from {}'.format(peername))
+        self.transport = transport
 
 
-def get_start_pos(m, w, h):
-    """
-        m -> map_no
-        w -> max_width
-        h -> max_height
-    """
-    x = random.randint(1, w)
-    y = random.randint(1, h)
-    return (x, y)
+    def data_received(self, data):
+        global clients, started, clientsReceived, clientsArr
+        message = str(data.decode("ascii"))
+        print(message)
 
+        if message.strip() == 'READY':
+            self.id = len(clients)
+            clients.append(self)
 
-def get_all_start_pos(m, w, h, n):
-    """
-    get start position for all connected players
-        m -> map_no
-        w -> max_width
-        h -> max_height
-        n -> number of connected players
-    """
-    res = ''
-    for i in xrange(n):
-        x = get_start_pos(m, w, h)
-        res += str(x[0]) + 'x' + str(x[1]) + ':'
-    res = res[:-1]  # trimming last colon
-    return res
+        if len(clients)>=REQUIRED_PLAYERS and not started:
+            started = True
+            print(positions)
+            allPos = ":".join(["x".join((str(positions[x][0]), str(positions[x][1]))) for x in range(REQUIRED_PLAYERS)])
+            for i in clients:
+                i.transport.write(('START:'+str(i.id)+':1:'+allPos+'\n').encode('ascii'))
+            return
+        if len(clients)>=REQUIRED_PLAYERS:
+            print(message)
+            d = list(map(int, message.split(':')))
+            print(d)
+            clientsArr[d[0]] = d[1]
+            clientsReceived += 1
+        #wszyscy klienci dali nam swoje współrzędne, więc wysyłamy wszystkim wszystkie współrzędne
+        if clientsReceived == REQUIRED_PLAYERS:
+            for i in clients:
+                i.transport.write((":".join(list(map(str, clientsArr)))+'\n').encode('ascii'))
+            clientsReceived = 0
 
+    def eof_received(self):
+        self.transport.close()
 
-def parse_directions(dire):
-    res = ''
-    for i in dire:
-        print res
-        res += str(i).strip() + ':'
-    res = res[:-1]
-    res += '\n'
-    return res
-
-
-def com_with_clients():
-    global connections
-    print connections
-    map_no = get_map_no(9)
-    for i, c in enumerate(connections):
-        if c[0].recv(BUFF_SIZE).strip() != 'READY':
-            c[0].sendall('BLAD INICJALIZACJI POLACZENIA (nie ready?)')
-            print c, 'BLAD INICJALIZACJI POLACZENIA'
-            connections.remove(c)
-            c[0].close()
-    st_pos = get_all_start_pos(map_no, 15, 15, len(connections))
-    directions = [0 for i in xrange(len(connections))]
-    for i, c in enumerate(connections):
-        c[0].sendall('START\n')
-        connections[i][0].sendall(str(i) + ':' + str(map_no) + '\n')
-        c[0].sendall(st_pos + '\n')
-    while True:
-        for i, c in enumerate(connections):
-            directions[i] = c[0].recv(BUFF_SIZE)
-        dire=parse_directions(directions)
-        print dire
-        for i, c in enumerate(connections):
-            c[0].sendall(dire)
-
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+positions = [getRandomPos() for x in range(REQUIRED_PLAYERS)]
+loop = asyncio.get_event_loop()
+coro = loop.create_server(EchoServerClientProtocol, '127.0.0.1', 8880)
+server = loop.run_until_complete(coro)
 try:
-    s.bind((HOST, PORT))
-except socket.error as msg:
-    print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
-    sys.exit()
-s.listen(10)
-
-connections = []
-while 1:
-    #conn,addr = s.accept()
-    # if conn.recv(BUFF_SIZE) == 'READY':
-    # connections.append((conn,addr))
-    # s.accept()
-    connections.append(s.accept())
-    if len(connections) >= REQUIRED_PLAYERS:
-        com_with_clients()
-s.close()
+    loop.run_forever()
+except KeyboardInterrupt:
+    pass
+server.close()
+loop.run_until_complete(server.wait_closed())
+loop.close()
