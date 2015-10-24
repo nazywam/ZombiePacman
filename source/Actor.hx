@@ -11,7 +11,6 @@ class Actor extends FlxSprite {
 	public var previousPressedDirection:Int = FlxObject.UP;
 
 	public var canMove:Bool = true;
-
 	public var isDead:Bool = false;
 
 	override public function new(gridX:Int, gridY:Int){
@@ -32,6 +31,11 @@ class Actor extends FlxSprite {
 
 		x = Settings.GRID_X + gridPos.x * Settings.TILE_WIDTH;
 		y = Settings.GRID_Y + gridPos.y * Settings.TILE_WIDTH;
+	}
+
+	public function die(){
+		isDead = true;
+		animation.play("dead"+Std.random(4));
 	}
 
 	function updateRotation(){
