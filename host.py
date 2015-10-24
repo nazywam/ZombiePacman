@@ -3,7 +3,7 @@ import asyncio
 import binascii
 import random
 
-REQUIRED_PLAYERS = 2
+REQUIRED_PLAYERS = 3
 NUM_OF_LEVELS = 14
 started = False
 clientsArr = [0]*REQUIRED_PLAYERS
@@ -32,14 +32,11 @@ def init():
     f = open('assets/data/level'+str(level)+'.txt', 'r')
     s = f.read()
     f.close()
-    print(s)
     grid = [list(map(int, x.split(','))) for x in s.strip().split("\n")]
-    print(grid)
     positions = [getRandomPos() for x in range(REQUIRED_PLAYERS)]
     h = len(grid)
     w = len(grid[0])
     items = [['0']*w]*h
-    print(items)
     for i in range(w*h//10):
         items[random.randint(0, h-1)][random.randint(0, w-1)] = '1'
     for i in range(w*h//10):
@@ -65,25 +62,34 @@ class EchoServerClientProtocol(asyncio.Protocol):
         print(message)
 
         if message.strip() == 'READY':
+            print("Host: someone connected")
+            if len(clients) >= REQUIRED_PLAYERS:
+                print("Host: clients slots exceeded! fuck off!")
+                self.transport.close()
+                return
             self.id = len(clients)
+            print("Host: client number "+str(self.id)+" connected!")
             clients.append(self)
 
         if len(clients)>=REQUIRED_PLAYERS and not started:
+            print("Host: all clients connected!")
+            print("Host: sending data to clients...")
             started = True
-            print(positions)
             allPos = ":".join(["x".join((str(positions[x][0]), str(positions[x][1]))) for x in range(REQUIRED_PLAYERS)])
             for i in clients:
                 i.transport.write(('START:'+str(i.id)+':1\n'+allPos+'\n').encode('ascii'))
+                print("Host: sending \""+'START:'+str(i.id)+':1\n'+allPos+"\"")
             return
         if len(clients)>=REQUIRED_PLAYERS:
-            print(message)
+            print("Host: received: \""+message+"\"")
             d = list(map(int, message.split(':')))
-            print(d)
             clientsArr[d[0]] = d[1]
             clientsReceived += 1
         if clientsReceived == REQUIRED_PLAYERS:
+            print("Host: all clients reported their events - sending data...")
             for i in clients:
                 i.transport.write((":".join(list(map(str, clientsArr)))+'\n').encode('ascii'))
+                print("Host: sending \""+":".join(list(map(str, clientsArr)))+"\" to client number "+str(i.id))
             clientsReceived = 0
 
     def eof_received(self):
@@ -91,7 +97,7 @@ class EchoServerClientProtocol(asyncio.Protocol):
 
 init()
 loop = asyncio.get_event_loop()
-coro = loop.create_server(EchoServerClientProtocol, '10.10.97.146', 9911)
+coro = loop.create_server(EchoServerClientProtocol, 'localhost', 8880)
 server = loop.run_until_complete(coro)
 try:
     loop.run_forever()
