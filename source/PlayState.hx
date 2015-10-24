@@ -25,7 +25,7 @@ class PlayState extends FlxState
 	var clientId : Int;
 	var playersNumber : Int;
 
-	public static var ONLINE : Bool = false;
+	public static var ONLINE : Bool = true;
 
 	public static var host:String;
 	public static var port:Int;
@@ -33,7 +33,7 @@ class PlayState extends FlxState
 	override public function new(){
 		super();
 		host = "10.10.97.146";
-		port = 8888;
+		port = 9911;
 	}
 
 	override public function create():Void
@@ -67,19 +67,21 @@ class PlayState extends FlxState
 			var playerPos = getLine().split(":");
 			for(i in 0...playerPos.length){
 				var xy = playerPos[i].split("x");
-				trace(xy);
 				var a = new Actor(Std.parseInt(xy[0]), Std.parseInt(xy[1]));
 				actors.push(a);
 				add(a);
 			} 
 		} else {
+			loadMap("assets/data/level"+Std.string(Std.random(10))+".txt");
 			clientId = 0;
 			var a = new Actor(1, 1);
 			actors.push(a);
 			add(a);
-			loadMap("assets/data/level"+Std.string(Std.random(10))+".txt");
 		}
 		tick();
+
+
+		actors[0].die();
 	}
 
 	function getLine(){
@@ -110,16 +112,16 @@ class PlayState extends FlxState
 
 			var _rows = _lines[l].split(',');
 			for(r in 0..._rows.length){
-				var t = new Tile(r, l, Std.parseInt(_rows[r])-1);
+				var t = new Tile(r, l, Std.parseInt(_rows[r]));
 				add(t);
-				if(Std.parseInt(_rows[r]) != 1){
+				if(Std.parseInt(_rows[r]) != 0){
 					add(t.gibs);	
 				}
 				grid[l].push(t);
 
 				collectibles.push(null);
 
-				if(Std.parseInt(_rows[r]) == 1){
+				if(Std.parseInt(_rows[r]) == 0){
 
 					var value = 0;
 					if(Std.random(10) == 0){
@@ -156,6 +158,14 @@ class PlayState extends FlxState
 	}
 
 	function validMove(a:Actor, d:Int){
+
+		var tmp = getDirectionTurn(d);
+		if(getTile(a.gridPos.y + tmp[1], a.gridPos.x + tmp[0]).tileId != 0){
+			return false;
+		}
+		return true;
+
+		/*
 		switch (d) {
 			case FlxObject.UP:
 				if(getTile(a.gridPos.y-1, a.gridPos.x).tileId !=  0){
@@ -174,8 +184,29 @@ class PlayState extends FlxState
 					return false;
 				}
 		}
-
 		return true;
+		*/
+	}
+
+	function crossPaths(a:Actor, b:Actor):Bool{
+		var tmpA = getDirectionTurn(a.pressedDirection);
+		var tmpB = getDirectionTurn(b.pressedDirection);
+
+		return((a.gridPos.x + tmpA[0]) == (b.gridPos.x + tmpB[0]) && (a.gridPos.y + tmpA[1]) == (b.gridPos.y + tmpB[1]));
+	}
+
+	function getDirectionTurn(direction:Int){
+		switch (direction) {
+			case FlxObject.UP:
+				return [0, -1];
+			case FlxObject.RIGHT:
+				return [1, 0];
+			case FlxObject.DOWN:
+				return [0, 1];
+			case FlxObject.LEFT:
+				return [-1, 0];
+		}
+		return [0, 0];
 	}
 
 	public function tick(){
@@ -188,22 +219,32 @@ class PlayState extends FlxState
 					a.canMove = false;
 				}
 			}
+
+			if(a.isDead){
+				for(b in actors){
+					if(a != b && !b.isDead && crossPaths(a, b)){
+						b.die();
+					}
+				}
+			}
+
 			a.tick();
 
 			var gridY = Std.int(a.gridPos.y);
 			var gridX = Std.int(a.gridPos.x);
 
-			if(collectibles[gridY][gridX] != null && !collectibles[gridY][gridX].taken){
+			if(collectibles[gridY][gridX] != null && !collectibles[gridY][gridX].taken && !a.isDead){
 				collectibles[gridY][gridX].taken = true;
 				collectibles[gridY][gridX].visible = false;
 
 				if(collectibles[gridY][gridX].value == 2){
-					FlxG.camera.color = 0xFF000000 + Std.int(Math.sqrt(Math.sqrt(0xFFFFFF - Std.random(0xFFFFFF)))*0xFFFFFF);
+					FlxG.camera.color = 0xFF000000 + Std.random(0xFFFFFF);
 				}
 			}
+
+
 		}
 
-		trace(preTick);
 		var t = new FlxTimer();
 		t.start(Settings.TICK_TIME, function(_){
 			preTick();
