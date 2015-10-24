@@ -25,7 +25,7 @@ class PlayState extends FlxState
 	var clientId : Int;
 	var playersNumber : Int;
 
-	public static var ONLINE : Bool = true;
+	public static var ONLINE : Bool = false;
 
 	public static var host:String;
 	public static var port:Int;
@@ -112,6 +112,9 @@ class PlayState extends FlxState
 			for(r in 0..._rows.length){
 				var t = new Tile(r, l, Std.parseInt(_rows[r])-1);
 				add(t);
+				if(Std.parseInt(_rows[r]) != 1){
+					add(t.gibs);	
+				}
 				grid[l].push(t);
 
 				collectibles.push(null);
@@ -149,9 +152,6 @@ class PlayState extends FlxState
 				actors[i].pressedDirection = Std.parseInt(directions[i]);
 			}
 		}
-
-		trace("AfterTick");
-
 		tick();
 	}
 
@@ -179,7 +179,6 @@ class PlayState extends FlxState
 	}
 
 	public function tick(){
-		trace("First Tick");
 
 		for(a in actors){
 			if(!validMove(a, a.pressedDirection)){
@@ -199,10 +198,8 @@ class PlayState extends FlxState
 				collectibles[gridY][gridX].visible = false;
 
 				if(collectibles[gridY][gridX].value == 2){
-					FlxG.camera.color = 0xFF000000 + Std.random(0xFFFFFF);
+					FlxG.camera.color = 0xFF000000 + Std.int(Math.sqrt(Math.sqrt(0xFFFFFF - Std.random(0xFFFFFF)))*0xFFFFFF);
 				}
-				
-				
 			}
 		}
 

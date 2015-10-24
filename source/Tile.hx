@@ -7,6 +7,8 @@ class Tile extends FlxSprite {
 	public var gridPos : FlxPoint;
 	public var tileId : Int;
 
+	public var gibs:FlxSprite;
+
 	override public function new(gridX:Int, gridY:Int, t:Int){
 		super();
 		tileId = t;
@@ -15,10 +17,22 @@ class Tile extends FlxSprite {
 		animation.add("default", [t], 1);
 		animation.play("default");
 
+
+
 		gridPos = new FlxPoint(gridX, gridY);
 
 		x = Settings.GRID_X + gridPos.x * Settings.TILE_WIDTH;
 		y = Settings.GRID_Y + gridPos.y * Settings.TILE_WIDTH;
+
+		gibs = new FlxSprite(x, y);
+		gibs.loadGraphic("assets/images/creepy.png", true, 32, 32);
+		var tmp = 0;
+		if(Std.random(10) == 0){
+			tmp = Std.random(7);
+		}
+		gibs.animation.add("default", [tmp]);
+		gibs.animation.play("default");
+
 	}
 
 }
