@@ -49,7 +49,7 @@ class PlayState extends FlxState
 			socket = new Socket();
 			socket.setTimeout(1);
 			try {
-				socket.connect(new Host("localhost"), 6675);
+				socket.connect(new Host(host), port);
 			} 
 			catch(e:Dynamic){
 				trace("Couldn't connect to server");
@@ -61,16 +61,12 @@ class PlayState extends FlxState
 				var players = getLine();
 				if(players == "START"){
 					break;
-				} else if (players != ""){
-					trace(players, " player ready");
 				}
 			}
-			var tmp = getLine().split(":");
+			var tmp = getLine().split(':');
 
-			clientId = Std.parseInt(tmp[0]);
-			trace("Client Id: ", clientId);
-
-			var selectedMap:Int = Std.parseInt(tmp[1]);
+			clientId = Std.parseInt(tmp[1]);
+			var selectedMap = Std.parseInt(tmp[2]);
 			loadMap("assets/data/level" + selectedMap + ".txt");
 			trace("Map: ", selectedMap);
 
@@ -89,7 +85,6 @@ class PlayState extends FlxState
 			add(a);
 			loadMap("assets/data/level"+Std.string(Std.random(10))+".txt");
 		}
-		trace("tick");
 		tick();
 	}
 
@@ -155,7 +150,7 @@ class PlayState extends FlxState
 			socket.output.flush();
 
 			var d = getLine();
-			var directions = d.split("_");
+			var directions = d.split(":");
 			for(i in 0...directions.length){
 				actors[i].pressedDirection = Std.parseInt(directions[i]);
 			}
@@ -188,6 +183,8 @@ class PlayState extends FlxState
 	}
 
 	public function tick(){
+		trace("First Tick");
+
 		for(a in actors){
 			if(!validMove(a, a.pressedDirection)){
 				if(validMove(a, a.previousPressedDirection)){
