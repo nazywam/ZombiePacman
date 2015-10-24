@@ -41,7 +41,7 @@ class EchoServerClientProtocol(asyncio.Protocol):
             print(positions)
             allPos = ":".join(["x".join((str(positions[x][0]), str(positions[x][1]))) for x in range(REQUIRED_PLAYERS)])
             for i in clients:
-                i.transport.write(('START:'+str(i.id)+':1:'+allPos+'\n').encode('ascii'))
+                i.transport.write(('START:'+str(i.id)+':1\n'+allPos+'\n').encode('ascii'))
             return
         if len(clients)>=REQUIRED_PLAYERS:
             print(message)
