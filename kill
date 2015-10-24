@@ -1,0 +1,4 @@
+killall -9 ZombiePacman
+killall -9 python
+killall -9 neko
+killall -9 haxelib
