@@ -30,10 +30,10 @@ class PlayState extends FlxState
 	public static var host:String;
 	public static var port:Int;
 
-	override public function new(_h:String, _p:String){
+	override public function new(){
 		super();
-		host = _h;
-		port = Std.parseInt(_p);
+		host = "10.10.97.146";
+		port = 8888;
 	}
 
 	override public function create():Void
@@ -150,6 +150,8 @@ class PlayState extends FlxState
 			}
 		}
 
+		trace("AfterTick");
+
 		tick();
 	}
 
@@ -204,7 +206,7 @@ class PlayState extends FlxState
 			}
 		}
 
-
+		trace(preTick);
 		var t = new FlxTimer();
 		t.start(Settings.TICK_TIME, function(_){
 			preTick();
