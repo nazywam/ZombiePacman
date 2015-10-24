@@ -27,6 +27,15 @@ class PlayState extends FlxState
 
 	public static var ONLINE : Bool = true;
 
+	public static var host:String;
+	public static var port:Int;
+
+	override public function new(_h:String, _p:String){
+		super();
+		host = _h;
+		port = Std.parseInt(_p);
+	}
+
 	override public function create():Void
 	{
 		super.create();
@@ -40,7 +49,7 @@ class PlayState extends FlxState
 			socket = new Socket();
 			socket.setTimeout(1);
 			try {
-				socket.connect(new Host("10.10.99.85"), 6675);
+				socket.connect(new Host("localhost"), 6675);
 			} 
 			catch(e:Dynamic){
 				trace("Couldn't connect to server");
@@ -119,7 +128,16 @@ class PlayState extends FlxState
 				collectibles.push(null);
 
 				if(Std.parseInt(_rows[r]) == 1){
-					var c = new Collectible(r, l);
+
+					var value = 0;
+					if(Std.random(10) == 0){
+						value = 1;
+					}
+					if(Std.random(20) == 0){
+						value = 2;
+					}
+
+					var c = new Collectible(r, l, value);
 					add(c);
 					collectibles[l][r] = c;
 				}
@@ -133,7 +151,7 @@ class PlayState extends FlxState
 
 	public function preTick(){
 		if(ONLINE){
-			socket.output.writeString(Std.string(actors[clientId].pressedDirection));
+			socket.output.writeString(Std.string(clientId)+':'+Std.string(actors[clientId].pressedDirection));
 			socket.output.flush();
 
 			var d = getLine();
@@ -186,7 +204,11 @@ class PlayState extends FlxState
 			if(collectibles[gridY][gridX] != null && !collectibles[gridY][gridX].taken){
 				collectibles[gridY][gridX].taken = true;
 				collectibles[gridY][gridX].visible = false;
-				//FlxG.camera.color = 0xFF000000 + Std.random(0xFFFFFF);
+
+				if(collectibles[gridY][gridX].value == 2){
+					FlxG.camera.color = 0xFF000000 + Std.random(0xFFFFFF);
+				}
+				
 				
 			}
 		}
