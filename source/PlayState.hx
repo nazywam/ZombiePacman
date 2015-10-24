@@ -25,7 +25,7 @@ class PlayState extends FlxState
 	var clientId : Int;
 	var playersNumber : Int;
 
-	public static var ONLINE : Bool = false;
+	public static var ONLINE : Bool = true;
 
 	public static var host:String;
 	public static var port:Int;
