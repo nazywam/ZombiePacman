@@ -7,7 +7,7 @@ import sys
 from threading import *
 import random
 HOST = ''   # Symbolic name meaning all available interfaces
-PORT = 8789  # Arbitrary non-privileged port
+PORT = 8787  # Arbitrary non-privileged port
 players = []
 joined_flag = len(players)
 started_flag = False
@@ -80,13 +80,15 @@ def clientthread(conn, id_c):
     # infinite loop so that function do not terminate and thread do not end.
     while True:
         if joined_flag:
-            print 'joined_flag', joined_flag
+#            print 'joined_flag', joined_flag
+            print("lock 1 acquired ", id_c)
             lock.acquire()
             try:
                 joined_flag -= 1
                 print str(Player.ready_players) + '/' + str(no_players_req)+'\n'
                 conn.sendall(str(Player.ready_players) + '/' + str(no_players_req)+'\n')
             finally:
+                print("lock 1 released ", id_c)
                 lock.release()
             if Player.ready_players >= no_players_req and not started_flag:
                 conn.sendall('START\n')
@@ -103,13 +105,15 @@ def clientthread(conn, id_c):
                 conn.sendall(res)
                 players[id_c].started_flag=True
             if players[id_c].started_flag:
+                print("lock 2 acquired ", id_c)
                 lock.acquire()
                 try:
                     players[id_c].direction=conn.recv(1024).strip()
                     #print(id_c, ' id klienta i jego kierunek ', players[id_c].direction)
                 finally:
-                    print("lock 1 released ", id_c)
+                    print("lock 2 released ", id_c)
                     lock.release()
+                print("lock 3 acquired ", id_c)
                 lock.acquire()
                 try:
                     for i in xrange(len(players)):
@@ -122,7 +126,7 @@ def clientthread(conn, id_c):
                     print('kierunki', res)
                     conn.sendall(res)
                 finally:
-                    print("lock 2 released ", id_c)
+                    print("lock 3 released ", id_c)
                     lock.release()
             print 'wysylam'
         # Receiving from client
