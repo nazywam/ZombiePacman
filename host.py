@@ -2,8 +2,8 @@ import socket
 import random
 import sys
 
-HOST = 'localhost'
-PORT = 9999
+HOST = '10.10.97.146'
+PORT = 8888
 BUFF_SIZE = 1024
 
 REQUIRED_PLAYERS = 2
