@@ -7,7 +7,7 @@ import sys
 from threading import *
 import random
 HOST = ''   # Symbolic name meaning all available interfaces
-PORT = 9999  # Arbitrary non-privileged port
+PORT = 8789  # Arbitrary non-privileged port
 players = []
 joined_flag = len(players)
 started_flag = False
@@ -106,8 +106,9 @@ def clientthread(conn, id_c):
                 lock.acquire()
                 try:
                     players[id_c].direction=conn.recv(1024).strip()
-                    print(id_c, ' id klienta i jego kierunek ', players[id_c].direction)
+                    #print(id_c, ' id klienta i jego kierunek ', players[id_c].direction)
                 finally:
+                    print("lock 1 released ", id_c)
                     lock.release()
                 lock.acquire()
                 try:
@@ -121,6 +122,7 @@ def clientthread(conn, id_c):
                     print('kierunki', res)
                     conn.sendall(res)
                 finally:
+                    print("lock 2 released ", id_c)
                     lock.release()
             print 'wysylam'
         # Receiving from client
