@@ -17,11 +17,13 @@ import sys.net.Socket;
 class PlayState extends FlxState
 {
 
-	var actors : FlxTypedGroup<Actor>;
+	var player : Player;
+	var actors : Array<Actor>;
 	var grid : Array<Array<Tile>>;
 
 	var socket : Socket;
 	var clientId : Int;
+	var playersNumber : Int;
 
 	public static var ONLINE : Bool = true;
 
@@ -31,8 +33,7 @@ class PlayState extends FlxState
 		//FlxG.log.redirectTraces = true;
 		
 
-		actors = new FlxTypedGroup<Actor>();
-		add(actors);
+		actors = new Array<Actor>();
 
 		if(ONLINE){
 
@@ -46,33 +47,51 @@ class PlayState extends FlxState
 			}
 			socket.output.writeString("READY");
 			socket.output.flush();
-			//clientId = Std.parseInt(socket.input.readLine());
-			//trace("Client Id: ", clientId);
 
-			for(y in 0...99999999){ //because.... why not!
-
-				var players = "";
-
-				try {
-					players = socket.input.readLine();
-				}
-				catch(e:Dynamic){
-				}
-				
+			while(true){
+				players = getLine();
 				if(players == "START"){
 					break;
-				} else if (players != " "){
+				} else if (players != ""){
 					trace(players, " player ready");
 				}
 			}
-			var selectedMap:Int = Std.parseInt(socket.input.readLine());
+			var tmp = getLine().split(" ");
+
+			var selectedMap:Int = Std.parseInt(tmp[0]);
 			loadMap("assets/data/level" + selectedMap + ".txt");
+			trace("Map: ", selectedMap);
+
+			clientId = Std.parseInt(tmp[1]);
+			trace("Client Id: ", clientId);
+
+			var playerPos = getLine().split(" ");
+			for(i in playerPos.length){
+				var xy = playerPos[i].split("x");
+
+				var player = new Player(Std.int(xy[0]), Std.int(xy[1]));
+				actors.push(player);
+				add(player);
+			}
 		}
 
-		var player = new Player(2, 1);
-		actors.add(player);
-
+		player = actors[clientId];
 		tick();
+	}
+
+	function getLine(){
+		for(y in 0...123456789){
+			var a = "";
+
+			try {
+				a = socket.input.readLine();
+			}
+			catch (e:Dynamic){
+
+			}
+
+			return a;
+		}
 	}
 
 	public function loadMap(mapPath:String){
@@ -99,8 +118,16 @@ class PlayState extends FlxState
 
 	public function preTick(){
 		if(ONLINE){
-			//socket.output.writeInt32(player.pressedDirection);
+			socket.output.writeInt32(player.pressedDirection);
+			socket.output.flush();
+
+			var directions = getLine().split(" ");
+			for(i in 0...directions.length){
+				actors[i].pressedDirection = directions[i];
+			}
 		}
+
+		tick();
 	}
 
 	public function tick(){
@@ -110,7 +137,6 @@ class PlayState extends FlxState
 					if(getTile(a.gridPos.y-1, a.gridPos.x).tileId !=  0){
 						if(a.previousPressedDirection != a.pressedDirection){
 							a.pressedDirection = a.previousPressedDirection;
-							trace("1");
 						} else {
 							a.canMove = false;
 							
@@ -120,7 +146,6 @@ class PlayState extends FlxState
 					if(getTile(a.gridPos.y, a.gridPos.x+1).tileId !=  0){
 						if(a.previousPressedDirection != a.pressedDirection){
 							a.pressedDirection = a.previousPressedDirection;
-							trace("2");
 						} else {
 							a.canMove = false;
 							
@@ -130,7 +155,6 @@ class PlayState extends FlxState
 					if(getTile(a.gridPos.y+1, a.gridPos.x).tileId !=  0){
 						if(a.previousPressedDirection != a.pressedDirection){
 							a.pressedDirection = a.previousPressedDirection;
-							trace("3");
 						} else {
 							a.canMove = false;
 							
@@ -140,7 +164,6 @@ class PlayState extends FlxState
 					if(getTile(a.gridPos.y, a.gridPos.x-1).tileId !=  0){
 						if(a.previousPressedDirection != a.pressedDirection){
 							a.pressedDirection = a.previousPressedDirection;
-							trace("4");
 						} else {
 							a.canMove = false;
 							
@@ -152,16 +175,10 @@ class PlayState extends FlxState
 
 		var t = new FlxTimer();
 		t.start(Settings.TICK_TIME, function(_){
-			tick();
+			preTick();
 		});
 	}
-	
-	override public function destroy():Void
-	{
-		super.destroy();
-	}
-
-	
+		
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
