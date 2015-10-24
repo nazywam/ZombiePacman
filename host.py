@@ -4,15 +4,37 @@ import binascii
 import random
 
 REQUIRED_PLAYERS = 2
+NUM_OF_LEVELS = 14
 started = False
 clientsArr = [0]*REQUIRED_PLAYERS
 clientsReceived = 0
 clients = []
 positions = []
+level = 0
+grid = []
 
 def getRandomPos():
-    return (random.randint(0,4), random.randint(0, 4))
+    global grid
+    h = len(grid)
+    w = len(grid[0])
+    x = random.randint(0, w-1)
+    y = random.randint(0, h-1)
+    while grid[y][x] != 0:
+        x = random.randint(0, w-1)
+        y = random.randint(0, h-1)
+    grid[y][x] = -1
+    return (x, y)
 
+def init():
+    global level, positions, grid
+    level = random.randint(1, NUM_OF_LEVELS)
+    f = open('assets/data/level'+str(level)+'.txt', 'r')
+    s = f.read()
+    f.close()
+    print(s)
+    grid = [list(map(int, x.split(','))) for x in s.strip().split("\n")]
+    print(grid)
+    positions = [getRandomPos() for x in range(REQUIRED_PLAYERS)]
 
 class EchoServerClientProtocol(asyncio.Protocol):
 
@@ -49,7 +71,6 @@ class EchoServerClientProtocol(asyncio.Protocol):
             print(d)
             clientsArr[d[0]] = d[1]
             clientsReceived += 1
-        #wszyscy klienci dali nam swoje współrzędne, więc wysyłamy wszystkim wszystkie współrzędne
         if clientsReceived == REQUIRED_PLAYERS:
             for i in clients:
                 i.transport.write((":".join(list(map(str, clientsArr)))+'\n').encode('ascii'))
@@ -58,7 +79,7 @@ class EchoServerClientProtocol(asyncio.Protocol):
     def eof_received(self):
         self.transport.close()
 
-positions = [getRandomPos() for x in range(REQUIRED_PLAYERS)]
+init()
 loop = asyncio.get_event_loop()
 coro = loop.create_server(EchoServerClientProtocol, '127.0.0.1', 8880)
 server = loop.run_until_complete(coro)
