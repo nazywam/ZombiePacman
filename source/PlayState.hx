@@ -25,7 +25,7 @@ class PlayState extends FlxState
 	var clientId : Int;
 	var playersNumber : Int;
 
-	public static var ONLINE : Bool = true;
+	public static var ONLINE : Bool = false;
 
 	override public function create():Void
 	{
@@ -49,7 +49,7 @@ class PlayState extends FlxState
 			socket.output.flush();
 
 			while(true){
-				players = getLine();
+				var players = getLine();
 				if(players == "START"){
 					break;
 				} else if (players != ""){
@@ -66,16 +66,14 @@ class PlayState extends FlxState
 			trace("Client Id: ", clientId);
 
 			var playerPos = getLine().split(" ");
-			for(i in playerPos.length){
+			for(i in 0...playerPos.length){
 				var xy = playerPos[i].split("x");
 
-				var player = new Player(Std.int(xy[0]), Std.int(xy[1]));
-				actors.push(player);
-				add(player);
+				var a = new Actor(Std.parseInt(xy[0]), Std.parseInt(xy[1]));
+				actors.push(a);
+				add(a);
 			}
 		}
-
-		player = actors[clientId];
 		tick();
 	}
 
@@ -84,14 +82,12 @@ class PlayState extends FlxState
 			var a = "";
 
 			try {
-				a = socket.input.readLine();
+				return  socket.input.readLine();
 			}
 			catch (e:Dynamic){
-
 			}
-
-			return a;
 		}
+		return "";
 	}
 
 	public function loadMap(mapPath:String){
@@ -123,7 +119,7 @@ class PlayState extends FlxState
 
 			var directions = getLine().split(" ");
 			for(i in 0...directions.length){
-				actors[i].pressedDirection = directions[i];
+				actors[i].pressedDirection = Std.parseInt(directions[i]);
 			}
 		}
 
@@ -178,9 +174,27 @@ class PlayState extends FlxState
 			preTick();
 		});
 	}
-		
+
+	function handleKeys(){
+		if(FlxG.keys.justPressed.UP){
+			actors[clientId].pressedDirection = FlxObject.UP;
+		}
+		if(FlxG.keys.justPressed.RIGHT){
+			actors[clientId].pressedDirection = FlxObject.RIGHT;	
+		}
+
+		if(FlxG.keys.justPressed.DOWN){
+			actors[clientId].pressedDirection = FlxObject.DOWN;
+		}
+
+		if(FlxG.keys.justPressed.LEFT){
+			actors[clientId].pressedDirection = FlxObject.LEFT;
+		}
+	}
+
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		handleKeys();
 	}	
 }
