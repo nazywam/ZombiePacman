@@ -8,3 +8,5 @@ Dzięki unikalnemu trybowi rozgrywki "ZOMBIE" każdy ma szanse na zwycięstwo. Z
 ![screenshot] (https://i.imgur.com/AR2jTjb.png "Screenshot 1")
 ![screenshot] (https://i.imgur.com/AR2jTjb.png "Screenshot 2")
 ![screenshot] (https://i.imgur.com/T0MVPhS.png "Screenshot 3")
+![screenshot] (https://i.imgur.com/7ArRq9k.png "Screenshot 4")
+![screenshot] (https://i.imgur.com/nx6k9Ss.png "Screenshot 5")
