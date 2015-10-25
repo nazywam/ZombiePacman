@@ -233,8 +233,7 @@ class PlayState extends FlxState
 
 			if(a.isDead){
 				for(b in actors){
-					if(a != b  && crossPaths(a, b)){// && !b.isDead ){
-						trace("WOOOP");
+					if(a != b  && crossPaths(a, b) && !b.isDead){
 						b.die();
 					}
 				}
