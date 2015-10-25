@@ -72,7 +72,7 @@ class PlayState extends FlxState
 				add(a);
 			} 
 		} else {
-			loadMap("assets/data/level"+Std.string(Std.random(10))+".txt");
+			loadMap("assets/data/level"+Std.string(Std.random(8))+".txt");
 			clientId = 0;
 			var a = new Actor(1, 1);
 			actors.push(a);
@@ -81,7 +81,7 @@ class PlayState extends FlxState
 		tick();
 
 
-		actors[0].die();
+	//	actors[0].die();
 	}
 
 	function getLine(){
