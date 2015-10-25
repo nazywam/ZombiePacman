@@ -27,13 +27,8 @@ def getRandomPos():
     return (x, y)
 
 def init():
-<<<<<<< HEAD
     global level, positions, grid, items
     level = random.randint(0, NUM_OF_LEVELS-1)
-=======
-    global level, positions, grid
-    level = random.randint(1, NUM_OF_LEVELS)
->>>>>>> aa8b56354f2fd35b3cad9f8516ce5a3dbafe43cb
     f = open('assets/data/level'+str(level)+'.txt', 'r')
     s = f.read()
     f.close()
@@ -83,13 +78,8 @@ class EchoServerClientProtocol(asyncio.Protocol):
             started = True
             allPos = ":".join(["x".join((str(positions[x][0]), str(positions[x][1]))) for x in range(REQUIRED_PLAYERS)])
             for i in clients:
-<<<<<<< HEAD
                 i.transport.write(('START:'+str(i.id)+':'+str(level)+'\n'+allPos+'\n'+items+"\n").encode('ascii'))
                 print("Host: sending \""+'START:'+str(i.id)+':'+str(level)+'\n'+allPos+"\n"+items+"\"")
-=======
-                i.transport.write(('START:'+str(i.id)+':'+str(level)+'\n'+allPos+'\n').encode('ascii'))
-                print("Host: sending \""+'START:'+str(i.id)+':1\n'+allPos+"\"")
->>>>>>> aa8b56354f2fd35b3cad9f8516ce5a3dbafe43cb
             return
         if len(clients)>=REQUIRED_PLAYERS:
             print("Host: received: \""+message+"\"")
