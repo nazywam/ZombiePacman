@@ -80,6 +80,9 @@ class PlayState extends FlxState
 		}
 		tick();
 
+		if(clientId == 0){
+			actors[0].die();
+		}
 
 	//	actors[0].die();
 	}
