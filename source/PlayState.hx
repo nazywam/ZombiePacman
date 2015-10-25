@@ -23,6 +23,8 @@ class PlayState extends FlxState
 	var grid : Array<Array<Tile>>;
 	var collectibles : Array<Array<Collectible>>;
 
+	var collectiblesG : FlxTypedGroup<Collectible>;
+
 	var socket : Socket;
 	var clientId : Int;
 	var playersNumber : Int;
@@ -35,16 +37,19 @@ class PlayState extends FlxState
 	public static var host:String;
 	public static var port:Int;
 
+
 	var scoreText : FlxText;
 	var score : Int = 0;
 
 	var coinsToCollect:Int = 0;
 
-	var ghostsBlinking:Bool = false;
+	var ghostsBlinks:Int = 0;
 
 	var winnerText:FlxText;
 
 	var bestActor:Actor;
+
+	var items:String;
 
 	override public function new(){
 		super();
@@ -59,6 +64,8 @@ class PlayState extends FlxState
 		FlxG.autoPause = false;
 
 		actors = new Array<Actor>();
+		collectiblesG = new FlxTypedGroup<Collectible>();
+		add(collectiblesG);
 
 		if(ONLINE){
 
@@ -77,8 +84,6 @@ class PlayState extends FlxState
 
 			clientId = Std.parseInt(tmp[1]);
 			var selectedMap = Std.parseInt(tmp[2]);
-			loadMap("assets/data/level" + selectedMap + ".txt");
-			trace("Map: ", selectedMap);
 
 			var playerPos = getLine().split(":");
 			for(i in 0...playerPos.length){
@@ -87,6 +92,11 @@ class PlayState extends FlxState
 				actors.push(a);
 				add(a);
 			} 
+
+			items = getLine();
+
+			loadMap("assets/data/level" + selectedMap + ".txt");
+
 		} else {
 			loadMap("assets/data/level"+Std.random(6)+".txt");
 			clientId = 0;
@@ -168,7 +178,7 @@ class PlayState extends FlxState
 				blinkGhosts(i-1);
 			});
 		} else {
-			ghostsBlinking = false;
+			ghostsBlinks--;
 		}
 	}
 
@@ -197,17 +207,19 @@ class PlayState extends FlxState
 				if(Std.parseInt(_rows[r]) == 0){
 
 					var value = 0;
-					if(Std.random(15) == 0){
-						value = 1;
-						coinsToCollect++;
-					} if(Std.random(20) == 0){
-						value = 2;
-					} else {
-						coinsToCollect++;
+
+					switch(items.charAt(l * _rows.length + r)){
+						case '0':
+							coinsToCollect++;
+						case '1':
+							value = 1;
+							coinsToCollect++;
+						case '2':
+							value = 2;
 					}
 
 					var c = new Collectible(r, l, value);
-					add(c);
+					collectiblesG.add(c);
 					collectibles[l][r] = c;
 				}
 			}
@@ -304,7 +316,7 @@ class PlayState extends FlxState
 			if(a.isDead){
 				for(b in actors){
 					if(a != b  && crossPaths(a, b) && !b.isDead){
-						if(ghostsBlinking){
+						if(ghostsBlinks > 0){
 							a.visible = false;
 							a.solid = false;
 							b.score += 10000;
@@ -340,7 +352,7 @@ class PlayState extends FlxState
 					case 1:
 						a.score += 5000;
 						coinsToCollect--;
-						ghostsBlinking = true;
+						ghostsBlinks++;
 						blinkGhosts(12);
 
 						if(a.ID == clientId){
