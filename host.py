@@ -4,7 +4,7 @@ import binascii
 import random
 
 REQUIRED_PLAYERS = 2
-NUM_OF_LEVELS = 7
+NUM_OF_LEVELS = 5
 started = False
 clientsArr = [0]*REQUIRED_PLAYERS
 clientsReceived = 0
