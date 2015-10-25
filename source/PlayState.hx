@@ -67,14 +67,14 @@ class PlayState extends FlxState
 			var playerPos = getLine().split(":");
 			for(i in 0...playerPos.length){
 				var xy = playerPos[i].split("x");
-				var a = new Actor(Std.parseInt(xy[0]), Std.parseInt(xy[1]));
+				var a = new Actor(Std.parseInt(xy[0]), Std.parseInt(xy[1]), i);
 				actors.push(a);
 				add(a);
 			} 
 		} else {
 			loadMap("assets/data/level"+Std.string(Std.random(8))+".txt");
 			clientId = 0;
-			var a = new Actor(1, 1);
+			var a = new Actor(1, 1, 0);
 			actors.push(a);
 			add(a);
 		}

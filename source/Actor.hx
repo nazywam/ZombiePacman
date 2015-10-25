@@ -20,7 +20,7 @@ class Actor extends FlxSprite {
 
 		ID = i;
 
-		loadGraphic("assets/images/Player"+Std.string(i%3)".png", true, 32, 32);
+		loadGraphic("assets/images/Player"+Std.string(i%3)+".png", true, 32, 32);
 		animation.add("default", [0, 1, 2, 3, 4, 3, 2, 1], 10);
 		animation.add("dead", [8, 9], 2);
 		animation.play("default");
