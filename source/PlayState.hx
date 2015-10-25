@@ -22,6 +22,8 @@ class PlayState extends FlxState
 	var actors : Array<Actor>;
 	var grid : Array<Array<Tile>>;
 	var collectibles : Array<Array<Collectible>>;
+	var tiles : FlxTypedGroup<Tile>;
+
 
 	var collectiblesG : FlxTypedGroup<Collectible>;
 
@@ -64,8 +66,11 @@ class PlayState extends FlxState
 		FlxG.autoPause = false;
 
 		actors = new Array<Actor>();
+		tiles = new FlxTypedGroup<Tile>();
+		add(tiles);
 		collectiblesG = new FlxTypedGroup<Collectible>();
 		add(collectiblesG);
+		
 
 		if(ONLINE){
 
@@ -94,9 +99,7 @@ class PlayState extends FlxState
 			} 
 
 			items = getLine();
-
 			loadMap("assets/data/level" + selectedMap + ".txt");
-
 		} else {
 			loadMap("assets/data/level"+Std.random(6)+".txt");
 			clientId = 0;
@@ -196,7 +199,7 @@ class PlayState extends FlxState
 			var _rows = _lines[l].split(',');
 			for(r in 0..._rows.length){
 				var t = new Tile(r, l, Std.parseInt(_rows[r]));
-				add(t);
+				tiles.add(t);
 				if(Std.parseInt(_rows[r]) != 0){
 					add(t.gibs);	
 				}
