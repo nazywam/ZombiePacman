@@ -77,7 +77,7 @@ class EchoServerClientProtocol(asyncio.Protocol):
             started = True
             allPos = ":".join(["x".join((str(positions[x][0]), str(positions[x][1]))) for x in range(REQUIRED_PLAYERS)])
             for i in clients:
-                i.transport.write(('START:'+str(i.id)+':'+level+'\n'+allPos+'\n').encode('ascii'))
+                i.transport.write(('START:'+str(i.id)+':'+str(level)+'\n'+allPos+'\n').encode('ascii'))
                 print("Host: sending \""+'START:'+str(i.id)+':1\n'+allPos+"\"")
             return
         if len(clients)>=REQUIRED_PLAYERS:
