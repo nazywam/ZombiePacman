@@ -4,7 +4,7 @@ import binascii
 import random
 
 REQUIRED_PLAYERS = 3
-NUM_OF_LEVELS = 14
+NUM_OF_LEVELS = 15
 started = False
 clientsArr = [0]*REQUIRED_PLAYERS
 clientsReceived = 0
@@ -28,7 +28,7 @@ def getRandomPos():
 
 def init():
     global level, positions, grid
-    level = random.randint(1, NUM_OF_LEVELS)
+    level = random.randint(0, NUM_OF_LEVELS-1)
     f = open('assets/data/level'+str(level)+'.txt', 'r')
     s = f.read()
     f.close()
@@ -78,7 +78,7 @@ class EchoServerClientProtocol(asyncio.Protocol):
             allPos = ":".join(["x".join((str(positions[x][0]), str(positions[x][1]))) for x in range(REQUIRED_PLAYERS)])
             for i in clients:
                 i.transport.write(('START:'+str(i.id)+':'+str(level)+'\n'+allPos+'\n').encode('ascii'))
-                print("Host: sending \""+'START:'+str(i.id)+':1\n'+allPos+"\"")
+                print("Host: sending \""+'START:'+str(i.id)+':'+str(level)+'\n'+allPos+"\"")
             return
         if len(clients)>=REQUIRED_PLAYERS:
             print("Host: received: \""+message+"\"")
