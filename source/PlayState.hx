@@ -56,7 +56,7 @@ class PlayState extends FlxState
 	override public function new(){
 		super();
 		host = "10.10.97.146";
-		port = 9911;
+		port = 9912;
 	}
 
 	override public function create():Void
