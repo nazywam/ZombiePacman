@@ -64,6 +64,7 @@ class PlayState extends FlxState
 		super.create();
 		//FlxG.log.redirectTraces = true;
 		FlxG.autoPause = false;
+		FlxG.mouse.visible = false;
 
 		actors = new Array<Actor>();
 		tiles = new FlxTypedGroup<Tile>();
@@ -362,9 +363,7 @@ class PlayState extends FlxState
 							updateScore();
 						}
 					case 2:
-						if(a.ID == clientId){
-							FlxG.camera.color = 0xFFFAFAFA + Std.random(0x0050000) + Std.random(0x0000500) + Std.random(0x0000005);
-						}
+						FlxG.camera.color = 0xFF000000 + Std.random(0xFFFFFF);
 				}
 			}
 		}
