@@ -84,7 +84,6 @@ class PlayState extends FlxState
 			actors[0].die();
 		}
 
-	//	actors[0].die();
 	}
 
 	function getLine(){
@@ -195,7 +194,15 @@ class PlayState extends FlxState
 		var tmpA = getDirectionTurn(a.pressedDirection);
 		var tmpB = getDirectionTurn(b.pressedDirection);
 
-		return((a.gridPos.x + tmpA[0]) == (b.gridPos.x + tmpB[0]) && (a.gridPos.y + tmpA[1]) == (b.gridPos.y + tmpB[1]));
+		if(a.gridPos.x == b.gridPos.x && a.gridPos.y == b.gridPos.y){
+			return true;
+		}
+
+		if(a.gridPos.x - tmpA[0] == b.gridPos.x - tmpB[0] && a.gridPos.y - tmpA[1] == b.gridPos.y - tmpB[1]){
+			return true;	
+		}		
+
+		return false;
 	}
 
 	function getDirectionTurn(direction:Int){
@@ -222,16 +229,16 @@ class PlayState extends FlxState
 					a.canMove = false;
 				}
 			}
+			a.tick();
 
 			if(a.isDead){
 				for(b in actors){
-					if(a != b && !b.isDead && crossPaths(a, b)){
+					if(a != b  && crossPaths(a, b)){// && !b.isDead ){
+						trace("WOOOP");
 						b.die();
 					}
 				}
 			}
-
-			a.tick();
 
 			var gridY = Std.int(a.gridPos.y);
 			var gridX = Std.int(a.gridPos.x);
