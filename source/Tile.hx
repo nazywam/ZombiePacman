@@ -25,7 +25,7 @@ class Tile extends FlxSprite {
 		gibs = new FlxSprite(x, y);
 		gibs.loadGraphic("assets/images/creepy.png", true, 32, 32);
 		var tmp = 0;
-		if(Std.random(6) == 0){
+		if(Std.random(5) == 0){
 			tmp = Std.random(13);
 		}
 		gibs.animation.add("default", [tmp]);

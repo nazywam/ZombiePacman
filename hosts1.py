@@ -3,8 +3,8 @@ import asyncio
 import binascii
 import random
 
-REQUIRED_PLAYERS = 3
-NUM_OF_LEVELS = 15
+REQUIRED_PLAYERS = 2
+NUM_OF_LEVELS = 7
 started = False
 clientsArr = [0]*REQUIRED_PLAYERS
 clientsReceived = 0
@@ -27,8 +27,13 @@ def getRandomPos():
     return (x, y)
 
 def init():
-    global level, positions, grid
+<<<<<<< HEAD
+    global level, positions, grid, items
     level = random.randint(0, NUM_OF_LEVELS-1)
+=======
+    global level, positions, grid
+    level = random.randint(1, NUM_OF_LEVELS)
+>>>>>>> aa8b56354f2fd35b3cad9f8516ce5a3dbafe43cb
     f = open('assets/data/level'+str(level)+'.txt', 'r')
     s = f.read()
     f.close()
@@ -36,12 +41,13 @@ def init():
     positions = [getRandomPos() for x in range(REQUIRED_PLAYERS)]
     h = len(grid)
     w = len(grid[0])
-    items = [['0']*w]*h
+
+    items = ['0']*(w*h)
     for i in range(w*h//10):
-        items[random.randint(0, h-1)][random.randint(0, w-1)] = '1'
+        items[random.randint(0, w*h-1)] = '1'
     for i in range(w*h//10):
-        items[random.randint(0, h-1)][random.randint(0, h-1)] = '2'
-    items = "".join(["".join(x) for x in items])
+        items[random.randint(0, w*h-1)] = '2'
+    items = "".join(items)
 
 class EchoServerClientProtocol(asyncio.Protocol):
 
@@ -57,7 +63,7 @@ class EchoServerClientProtocol(asyncio.Protocol):
 
 
     def data_received(self, data):
-        global clients, started, clientsReceived, clientsArr
+        global clients, started, clientsReceived, clientsArr, items
         message = str(data.decode("ascii"))
         print(message)
 
@@ -77,8 +83,13 @@ class EchoServerClientProtocol(asyncio.Protocol):
             started = True
             allPos = ":".join(["x".join((str(positions[x][0]), str(positions[x][1]))) for x in range(REQUIRED_PLAYERS)])
             for i in clients:
+<<<<<<< HEAD
+                i.transport.write(('START:'+str(i.id)+':'+str(level)+'\n'+allPos+'\n'+items+"\n").encode('ascii'))
+                print("Host: sending \""+'START:'+str(i.id)+':'+str(level)+'\n'+allPos+"\n"+items+"\"")
+=======
                 i.transport.write(('START:'+str(i.id)+':'+str(level)+'\n'+allPos+'\n').encode('ascii'))
-                print("Host: sending \""+'START:'+str(i.id)+':'+str(level)+'\n'+allPos+"\"")
+                print("Host: sending \""+'START:'+str(i.id)+':1\n'+allPos+"\"")
+>>>>>>> aa8b56354f2fd35b3cad9f8516ce5a3dbafe43cb
             return
         if len(clients)>=REQUIRED_PLAYERS:
             print("Host: received: \""+message+"\"")
@@ -97,7 +108,7 @@ class EchoServerClientProtocol(asyncio.Protocol):
 
 init()
 loop = asyncio.get_event_loop()
-coro = loop.create_server(EchoServerClientProtocol, 'localhost', 8880)
+coro = loop.create_server(EchoServerClientProtocol, '10.10.97.146', 9911)
 server = loop.run_until_complete(coro)
 try:
     loop.run_forever()

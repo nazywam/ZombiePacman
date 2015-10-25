@@ -10,10 +10,12 @@ import flixel.group.FlxGroup;
 import flixel.util.FlxTimer;
 import openfl.Assets;
 import openfl.utils.ByteArray;
-
 import sys.net.Host;
 import sys.net.Socket;
-
+import flixel.text.FlxText.FlxTextAlign;
+import flixel.tweens.FlxTween;
+import flixel.tweens.FlxEase;
+import flixel.text.FlxText;
 class PlayState extends FlxState
 {
 
@@ -25,10 +27,24 @@ class PlayState extends FlxState
 	var clientId : Int;
 	var playersNumber : Int;
 
+
+	var gameFinished:Bool = false;
+
 	public static var ONLINE : Bool = true;
 
 	public static var host:String;
 	public static var port:Int;
+
+	var scoreText : FlxText;
+	var score : Int = 0;
+
+	var coinsToCollect:Int = 0;
+
+	var ghostsBlinking:Bool = false;
+
+	var winnerText:FlxText;
+
+	var bestActor:Actor;
 
 	override public function new(){
 		super();
@@ -67,21 +83,25 @@ class PlayState extends FlxState
 			var playerPos = getLine().split(":");
 			for(i in 0...playerPos.length){
 				var xy = playerPos[i].split("x");
-				var a = new Actor(Std.parseInt(xy[0]), Std.parseInt(xy[1]));
+				var a = new Actor(Std.parseInt(xy[0]), Std.parseInt(xy[1]), i);
 				actors.push(a);
 				add(a);
 			} 
 		} else {
-			loadMap("assets/data/level"+Std.string(Std.random(10))+".txt");
+			loadMap("assets/data/level"+Std.random(6)+".txt");
 			clientId = 0;
-			var a = new Actor(1, 1);
+			var a = new Actor(1, 1, 0);
 			actors.push(a);
 			add(a);
 		}
-		tick();
-
+		scoreText = new FlxText(0, 4, FlxG.width, getScore(), 16);
+		scoreText.alignment = FlxTextAlign.CENTER;
+		scoreText.color = 0xFFFFFF00;
+		add(scoreText);
 
 		actors[0].die();
+
+		tick();
 	}
 
 	function getLine(){
@@ -90,7 +110,6 @@ class PlayState extends FlxState
 
 			try {
 				var tmp = socket.input.readLine();
-				trace(tmp);
 				return  tmp;
 			}
 			catch (e:Dynamic){
@@ -99,7 +118,61 @@ class PlayState extends FlxState
 		return "";
 	}
 
-	public function loadMap(mapPath:String){
+	function getBestActor(){
+		var maxPoints:Int = -1;
+		var best:Actor = null;
+
+		for(a in actors){
+			if(a.score > maxPoints){
+				maxPoints = a.score;
+				best = a;
+			}
+		}
+
+		return best;
+	}
+
+	function finishGame(){
+		if(!gameFinished){
+			bestActor = getBestActor();
+
+			FlxG.camera.flash();
+			FlxG.camera.follow(bestActor);
+
+			winnerText = new FlxText(0, 0, FlxG.width, "WINNER", 16);
+			winnerText.alignment = FlxTextAlign.CENTER;
+			winnerText.color = 0xFFFFFF00; 
+			winnerText.alpha = 0;
+			add(winnerText);
+
+			gameFinished = true;
+		}
+	}
+
+	function blinkGhosts(i:Int){
+		for(a in actors){
+			if(a.isDead){
+				if(i == 0){
+					a.color = 0xFFFFFFFF;
+				}else if(i%2==0){
+					a.color = 0xFFFF00FF;
+				} else {
+					a.color = 0xFFFFFF00;
+				}
+			}
+		}
+
+		if(i > 0){
+			var t = new FlxTimer();
+			t.start(.5, function(_){
+				blinkGhosts(i-1);
+			});
+		} else {
+			ghostsBlinking = false;
+		}
+	}
+
+	function loadMap(mapPath:String){
 		var _map = Assets.getText(mapPath);
 		var _lines =_map.split('\n');
 
@@ -124,11 +197,13 @@ class PlayState extends FlxState
 				if(Std.parseInt(_rows[r]) == 0){
 
 					var value = 0;
-					if(Std.random(10) == 0){
+					if(Std.random(15) == 0){
 						value = 1;
-					}
-					if(Std.random(20) == 0){
+						coinsToCollect++;
+					} if(Std.random(20) == 0){
 						value = 2;
+					} else {
+						coinsToCollect++;
 					}
 
 					var c = new Collectible(r, l, value);
@@ -139,6 +214,14 @@ class PlayState extends FlxState
 		}
 	}
 	
+	function getScore():String{
+		var s = Std.string(actors[clientId].score);
+		while(s.length < 8){
+			s = '0'+s;
+		}
+		return s;
+	}
+
 	function getTile(_y:Float, _x:Float){
 		return grid[Std.int(_y)][Std.int(_x)];
 	}
@@ -157,6 +240,17 @@ class PlayState extends FlxState
 		tick();
 	}
 
+	function updateScore(){
+		scoreText.text = getScore();
+
+		FlxTween.tween(scoreText, {y:-1}, .1, {ease:FlxEase.bounceOut});
+
+		var t = new FlxTimer();
+		t.start(.1, function(_){
+			FlxTween.tween(scoreText, {y:4}, .1, {ease:FlxEase.bounceInOut});
+		});
+	}
+
 	function validMove(a:Actor, d:Int){
 
 		var tmp = getDirectionTurn(d);
@@ -164,35 +258,21 @@ class PlayState extends FlxState
 			return false;
 		}
 		return true;
-
-		/*
-		switch (d) {
-			case FlxObject.UP:
-				if(getTile(a.gridPos.y-1, a.gridPos.x).tileId !=  0){
-					return false;
-				}
-			case FlxObject.RIGHT:
-				if(getTile(a.gridPos.y, a.gridPos.x+1).tileId !=  0){
-					return false;
-				}
-			case FlxObject.DOWN:
-				if(getTile(a.gridPos.y+1, a.gridPos.x).tileId !=  0){
-					return false;
-				}
-			case FlxObject.LEFT:
-				if(getTile(a.gridPos.y, a.gridPos.x-1).tileId !=  0){
-					return false;
-				}
-		}
-		return true;
-		*/
 	}
 
 	function crossPaths(a:Actor, b:Actor):Bool{
 		var tmpA = getDirectionTurn(a.pressedDirection);
 		var tmpB = getDirectionTurn(b.pressedDirection);
 
-		return((a.gridPos.x + tmpA[0]) == (b.gridPos.x + tmpB[0]) && (a.gridPos.y + tmpA[1]) == (b.gridPos.y + tmpB[1]));
+		if(a.gridPos.x == b.gridPos.x && a.gridPos.y == b.gridPos.y){
+			return true;
+		}
+
+		if(a.gridPos.x - tmpA[0] == b.gridPos.x - tmpB[0] && a.gridPos.y - tmpA[1] == b.gridPos.y - tmpB[1] && a.couldMove && b.couldMove){
+			return true;	
+		}		
+
+		return false;
 	}
 
 	function getDirectionTurn(direction:Int){
@@ -219,16 +299,28 @@ class PlayState extends FlxState
 					a.canMove = false;
 				}
 			}
+			a.tick();
 
 			if(a.isDead){
 				for(b in actors){
-					if(a != b && !b.isDead && crossPaths(a, b)){
-						b.die();
+					if(a != b  && crossPaths(a, b) && !b.isDead){
+						if(ghostsBlinking){
+							a.visible = false;
+							a.solid = false;
+							b.score += 10000;
+							if(b.ID == clientId){
+								updateScore();
+							}
+						} else {
+							b.die();
+							a.score += 10000;
+							if(a.ID == clientId){
+								updateScore();
+							}	
+						}
 					}
 				}
 			}
-
-			a.tick();
 
 			var gridY = Std.int(a.gridPos.y);
 			var gridX = Std.int(a.gridPos.x);
@@ -237,12 +329,33 @@ class PlayState extends FlxState
 				collectibles[gridY][gridX].taken = true;
 				collectibles[gridY][gridX].visible = false;
 
-				if(collectibles[gridY][gridX].value == 2){
-					FlxG.camera.color = 0xFF000000 + Std.random(0xFFFFFF);
+				switch (collectibles[gridY][gridX].value) {
+					case 0:
+						a.score += 100;
+						coinsToCollect--;
+
+						if(a.ID == clientId){
+							updateScore();
+						}
+					case 1:
+						a.score += 5000;
+						coinsToCollect--;
+						ghostsBlinking = true;
+						blinkGhosts(12);
+
+						if(a.ID == clientId){
+							updateScore();
+						}
+					case 2:
+						if(a.ID == clientId){
+							FlxG.camera.color = 0xFFFAFAFA + Std.random(0x0050000) + Std.random(0x0000500) + Std.random(0x0000005);
+						}
 				}
 			}
+		}
 
-
+		if(!anyPacmanAlive() || coinsToCollect == 0 || !morePacmanExist()){
+			finishGame();
 		}
 
 		var t = new FlxTimer();
@@ -250,6 +363,27 @@ class PlayState extends FlxState
 			preTick();
 		});
 	}
+
+	function morePacmanExist(){
+		var s:Int = 0;
+
+		for(a in actors){
+			if(a.visible){
+				s++;
+			}
+		}
+		return s > 1;
+	}
+
+	function anyPacmanAlive(){
+		for(a in actors){
+			if(!a.isDead){
+				return true;
+			}
+		}
+		return false;
+	}
+
 
 	function handleKeys(){
 		if(FlxG.keys.justPressed.UP){
@@ -272,5 +406,11 @@ class PlayState extends FlxState
 	{
 		super.update(elapsed);
 		handleKeys();
+		if(gameFinished){
+			FlxG.camera.setScale(Math.min(3, FlxG.camera.scaleX + .01), Math.min(3, FlxG.camera.scaleY + .01));
+			winnerText.x = bestActor.x + bestActor.width/2 - winnerText.width/2;
+			winnerText.y = bestActor.y - bestActor.height - 4;
+			winnerText.alpha = Math.min(1, winnerText.alpha += 0.01);
+		}
 	}	
 }
