@@ -22,7 +22,7 @@ class Actor extends FlxSprite {
 
 		loadGraphic("assets/images/Player"+Std.string(i%3)+".png", true, 32, 32);
 		animation.add("default", [0, 1, 2, 3, 4, 3, 2, 1], 10);
-		animation.add("dead", [8, 9], 2);
+		animation.add("dead", [5, 6], 2);
 		animation.play("default");
 
 		gridPos = new FlxPoint(gridX, gridY);
