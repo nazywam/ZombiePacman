@@ -11,8 +11,11 @@ class Actor extends FlxSprite {
 	public var previousPressedDirection:Int = FlxObject.UP;
 
 	public var canMove:Bool = true;
+	public var couldMove:Bool = false;
+
 	public var isDead:Bool = false;
 
+	public var score:Int = 0;
 
 
 	override public function new(gridX:Int, gridY:Int, i:Int){
@@ -79,7 +82,7 @@ class Actor extends FlxSprite {
 					gridPos.x--;
 			}
 		}
-
+		couldMove = canMove;
 		canMove = true;
 		previousPressedDirection = pressedDirection;
 	}
